@@ -8,9 +8,12 @@ class Board:
         self.height = height
         self.width = width
         self.board = []
+        self.next_board = [[False, False, False], [False, False, False], [False, False, False]]
+
         for _ in range(self.height):
             row = [False] * self.width
             self.board.append(row)
+
 
     def __str__(self):
         """Return a string representation of a board.
@@ -24,26 +27,75 @@ class Board:
         alive_cell = "o"  # noqa
         empty = "."  # noqa
         new_line = "\n"  # noqa
-        return str(self.board)
+        result = ''
+        for row_i, row in enumerate(self.board):
+            result += new_line
+            row_str = [alive_cell if self.is_alive(row_i, col_i) else empty for col_i in range(len(row))]
+            result += ''.join(row_str)
+        return result
 
-    def place_cell(self, row: int, col: int):
-        """Make a cell alive."""
-        pass
+    def place_cell(self, row: int, col: int) -> None:
+        if not self.board[row][col]:
+            self.board[row][col] = True
 
-    def toggle_cell(self, row: int, col: int) -> None:
+    def toggle_cell(self, row: int, col: int):
         """Invert state of the cell."""
-        pass
+        cell_neigbours_pos = []
+        up_border = -1
+        down_border = 2
+        left_border = -1
+        right_border = 2
+        if row == 0:
+            up_border = 0
+        if row == self.height - 1:
+            down_border = 1
+        if col == 0:
+            left_border = 0
+        if col == self.width - 1:
+            right_border = 1
+        for row_diff in range(up_border, down_border):
+            for col_diff in range(left_border, right_border):
+                if row_diff == 0 and col_diff == 0:
+                    pass
+                else:
+                    cell_neigbours_pos.append([row + row_diff, col + col_diff])
+
+        alive_neghbours = 0
+        for pos in cell_neigbours_pos:
+            cell_row = pos[0]
+            cell_col = pos[1]
+            if self.is_alive(cell_row, cell_col):
+                alive_neghbours += 1
+
+        next_condition = False
+        if alive_neghbours <= 1 or alive_neghbours >= 4:
+            next_condition = False
+        if alive_neghbours == 2 and self.is_alive(row, col):
+            next_condition = True
+        if alive_neghbours == 3 and not self.is_alive(row, col):
+            next_condition = True
+
+        self.next_board[row][col] = next_condition
 
     def is_alive(self, row: int, col: int) -> bool:
-        pass
+        return self.board[row][col]
 
     def next(self) -> None:
-        pass
+        for row in range(0, self.height):
+            for col in range(0, self.width):
+                self.toggle_cell(row, col)
+
+        self.board = self.next_board
+
+        self.next_board = []
+        for _ in range(self.height):
+            row = [False] * self.width
+            self.next_board.append(row)
 
 
 if __name__ == "__main__":
     board = Board(3, 3)
-    for i in range(3):
+    for i in range(0, 3):
         board.place_cell(1, i)
 
     for i in range(100):
