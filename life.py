@@ -9,11 +9,13 @@ class Board:
         self.width = width
         self.board = []
         self.next_board = [[False, False, False], [False, False, False], [False, False, False]]
+        # self.next_board  - вспомогательная доска, нужна для того, чтобы не изменять self.board при выполнении метода toggle
+        # почему-то, когда я добавляю self.next_board в цикл ниже, чтобы так же заполнить её False,
+        # происходит необъяснимый баг, поэтому пока так
 
         for _ in range(self.height):
             row = [False] * self.width
             self.board.append(row)
-
 
     def __str__(self):
         """Return a string representation of a board.
@@ -38,9 +40,10 @@ class Board:
         if not self.board[row][col]:
             self.board[row][col] = True
 
-    def toggle_cell(self, row: int, col: int):
+    def toggle_cell(self, row: int, col: int) -> None:
         """Invert state of the cell."""
-        cell_neigbours_pos = []
+        cell_neigbours_pos = []  # создаю пустой список с позициями всех соседей клетки
+        # определяю границы, чтобы не выйти за границы board
         up_border = -1
         down_border = 2
         left_border = -1
@@ -53,29 +56,31 @@ class Board:
             left_border = 0
         if col == self.width - 1:
             right_border = 1
-        for row_diff in range(up_border, down_border):
+
+        for row_diff in range(up_border, down_border):  # заполняю список с позициями соседей
             for col_diff in range(left_border, right_border):
                 if row_diff == 0 and col_diff == 0:
                     pass
                 else:
                     cell_neigbours_pos.append([row + row_diff, col + col_diff])
 
-        alive_neghbours = 0
+        alive_neghbours = 0  # считаю живых соседей текущей клетки по позициям из списка
         for pos in cell_neigbours_pos:
             cell_row = pos[0]
             cell_col = pos[1]
             if self.is_alive(cell_row, cell_col):
                 alive_neghbours += 1
 
+        # определяю следующее состояние клетки согласно правилам игры
         next_condition = False
         if alive_neghbours <= 1 or alive_neghbours >= 4:
             next_condition = False
-        if alive_neghbours == 2 and self.is_alive(row, col):
+        if alive_neghbours in (2, 3) and self.is_alive(row, col):
             next_condition = True
         if alive_neghbours == 3 and not self.is_alive(row, col):
             next_condition = True
 
-        self.next_board[row][col] = next_condition
+        self.next_board[row][col] = next_condition # заполняю вспомогательную доску следующим поколением клеток
 
     def is_alive(self, row: int, col: int) -> bool:
         return self.board[row][col]
